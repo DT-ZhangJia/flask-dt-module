@@ -5,6 +5,7 @@ learn flask views
 
 from datetime import datetime
 from flask import Flask, url_for, redirect, request, render_template, session, flash, current_app
+from flask_login import login_required
 
 from . import main
 from .forms import NameForm
@@ -12,9 +13,11 @@ from .. import mydb
 from ..email import send_email
 from ..models import User
 
+"""
+
 @main.route('/', methods=['GET', 'POST'])
 def index():
-    """index"""
+
     pyform = NameForm()
     if pyform.validate_on_submit():
         usercheck = User.query.filter_by(username=pyform.indexname.data).first()
@@ -37,3 +40,9 @@ def index():
                            indexname2=session.get('pyname'),
                            exist_index=session.get('exist', False),
                            current_time=datetime.utcnow())
+
+"""
+@main.route('/')
+def index():
+    return render_template('index.html')
+
