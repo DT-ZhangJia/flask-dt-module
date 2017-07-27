@@ -10,7 +10,8 @@ from . import mail
 
 
 def send_email(to, subject, template, **kwargs):
-    app = current_app._get_current_object()
+    """send mail method"""
+    app = current_app._get_current_object() #这个东西有什么用？# pylint: disable=W0212
     msg = Message(app.config['FLASKY_MAIL_SUBJECT_PREFIX'] + subject,
                   sender=app.config['FLASKY_MAIL_SENDER'], recipients=[to])
     msg.body = render_template(template + '.txt', **kwargs)

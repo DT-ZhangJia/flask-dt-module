@@ -3,15 +3,17 @@ learn flask views
 """
 # pylint: disable=invalid-name, too-few-public-methods
 
-from datetime import datetime
-from flask import Flask, url_for, redirect, request, render_template, session, flash, current_app
-from flask_login import login_required
+#from datetime import datetime
+#from flask import Flask, url_for, redirect, request, render_template, session, flash, current_app
+from flask import render_template
+#from flask_login import login_required
+
 
 from . import main
-from .forms import NameForm
-from .. import mydb
-from ..email import send_email
-from ..models import User
+#from .forms import NameForm
+#from .. import mydb
+#from ..email import send_email
+#from ..models import User
 
 """
 
@@ -25,8 +27,8 @@ def index():
             session['exist'] = False
             newuser = User(username=pyform.indexname.data, role_id=3)#建立新用户记录
             mydb.session.add(newuser)
-
-            send_email(current_app.config['FLASKY_ADMIN'], 'New User', 'mail/new_user', mailuser=newuser)
+            send_email(current_app.config['FLASKY_ADMIN'], 'New User',
+                       'mail/new_user', mailuser=newuser)
         else:
             session['exist'] = True
         old_name = session.get('pyname')
@@ -44,5 +46,7 @@ def index():
 """
 @main.route('/')
 def index():
+    """index view"""
     return render_template('index.html')
+
 

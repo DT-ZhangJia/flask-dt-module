@@ -3,9 +3,9 @@ learn flask views
 """
 # pylint: disable=invalid-name, too-few-public-methods
 
-from flask import Flask, url_for, redirect, request, render_template, session, flash
+#from flask import Flask, url_for, redirect, request, render_template, session, flash
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField
+from wtforms import StringField, SubmitField
 from wtforms.validators import Required
 
 class NameForm(FlaskForm):

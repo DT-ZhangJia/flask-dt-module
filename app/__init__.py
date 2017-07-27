@@ -19,7 +19,13 @@ moment = Moment()
 mydb = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.login' #自定义login视图函数的名称/路径
+login_manager.login_message = u"需要登录" #自定义login_message
+
+#@login_manager.unauthorized_handler #可自定义login_required为false的跳转路由
+#def unauthorized():
+#    """可自定义login_required为false的跳转路由"""
+#    return redirect(url_for('main.index'))
 
 
 def create_app(config_name):
