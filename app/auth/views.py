@@ -7,7 +7,7 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
 from ..models import User
-from .forms import LoginForm, RegisterForm
+from .forms import LoginForm, RegisterForm, ChangepwForm
 from .. import mydb
 from ..email import send_email
 
@@ -91,3 +91,17 @@ def resend_confirmation():
                'auth/email/confirm', mailuser=current_user, token=token)
     flash('A confirmation email sent.')
     return redirect(url_for('main.index'))
+
+@auth.route('/changepassword', methods=['GET', 'POST'])
+@login_required
+def change_passwd():
+    changepw_app = ChangepwForm()
+    if changepw_app.validate_on_submit():
+        if current_user.verify_passwd(changepw_app.old_passwd_input.data): 
+            current_user.passwd = changepw_app.passwd_chg_input.data
+            mydb.session.add(current_user)# pylint: disable=no-member
+            mydb.session.commit()
+            flash('Password is changed.')
+        else:
+            flash('Old password is not correct.')
+    return render_template('auth/changepassword.html', changepwform_display=changepw_app)

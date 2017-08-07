@@ -48,5 +48,3 @@ def index():
 def index():
     """index view"""
     return render_template('index.html')
-
-

@@ -32,3 +32,10 @@ class RegisterForm(FlaskForm):
         """check existed username"""
         if User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already in use.')
+
+class ChangepwForm(FlaskForm):
+    """change password form"""
+    old_passwd_input = PasswordField('Old Password', validators=[Required()])
+    passwd_chg_input = PasswordField('New Password', validators=[Required(), EqualTo('passwd2_chg_input', message='Passwords must match.')]) # pylint: disable=C0301
+    passwd2_chg_input = PasswordField('Confirm password', validators=[Required()])
+    submit_chg_btn = SubmitField('Change Password')
