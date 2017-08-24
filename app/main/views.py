@@ -6,14 +6,14 @@ learn flask views
 #from datetime import datetime
 #from flask import Flask, url_for, redirect, request, render_template, session, flash, current_app
 from flask import render_template
-#from flask_login import login_required
+from flask_login import login_required
 
 
 from . import main
 #from .forms import NameForm
 #from .. import mydb
 #from ..email import send_email
-#from ..models import User
+from ..models import User
 
 """
 
@@ -48,3 +48,11 @@ def index():
 def index():
     """index view"""
     return render_template('index.html')
+
+
+@main.route('/ulist')
+@login_required
+def ulist():
+    """user list"""
+    all_user = User.query.all()
+    return render_template('ulist.html', userlist=all_user)

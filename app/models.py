@@ -50,7 +50,7 @@ class User(UserMixin, mydb.Model):
         return self.uid #自设的user实例中的属性是uid
 
     def generate_confirmation_token(self, expiration=300):
-        """生成令牌"""
+        """生成注册确认令牌"""
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'confirm': self.uid})
 
@@ -59,7 +59,7 @@ class User(UserMixin, mydb.Model):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
-        except:
+        except: # pylint: disable=W0702
             return False
         if data.get('confirm') != self.uid:#这个检测有什么意义？
             return False
@@ -67,6 +67,24 @@ class User(UserMixin, mydb.Model):
         mydb.session.add(self)
         return True
 
+    def generate_resetpw_token(self, expiration=3600):
+        """生成重置密码确认令牌"""
+        s = Serializer(current_app.config['SECRET_KEY'], expiration)
+        return s.dumps({'reset': self.uid})
+
+    def reset_password(self, token, new_password):
+        """写入重置的新密码"""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except: # pylint: disable=W0702
+            return False
+        if data.get('reset') != self.uid:#reset的时候需要核对邮箱与申请重置的是同一个用户
+            return False
+        #self.passwd = new_password
+        self.passwd_hash = generate_password_hash(new_password)
+        mydb.session.add(self)
+        return True #放在这里难道是永恒为true？
 
     def __repr__(self):
         return '<User %r>' % self.username

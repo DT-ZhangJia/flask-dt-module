@@ -7,10 +7,11 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
 from ..models import User
-from .forms import LoginForm, RegisterForm, ChangepwForm
+from .forms import LoginForm, RegisterForm, ChangepwForm, ResetrequestForm, PasswordResetForm
 from .. import mydb
 from ..email import send_email
-
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from flask import current_app
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -22,7 +23,8 @@ def login():
             login_user(userlogin_check, loginform_app.remember_me_box.data)
             #return redirect(request.args.get('next') or url_for('main.index'))
             #next参数不知道是哪里来的
-            return redirect(url_for('main.index'))
+            #return redirect(url_for('main.index'))
+            return redirect(request.args.get('next') or url_for('main.index'))
         flash('Invalid email or password.')
     return render_template('auth/login.html', loginform_display=loginform_app)
 
@@ -54,7 +56,7 @@ def register():
 
 @auth.route('/confirm/<token>')
 @login_required
-def confirm(token):
+def confirmmail(token):
     """确认邮件url路由"""
     if current_user.confirmed:
         return redirect(url_for('main.index'))
@@ -105,3 +107,50 @@ def change_passwd():
         else:
             flash('Old password is not correct.')
     return render_template('auth/changepassword.html', changepwform_display=changepw_app)
+
+@auth.route('/reset', methods=['GET', 'POST'])
+def password_reset_request():
+    if not current_user.is_anonymous:
+        return redirect(url_for('main.index'))
+    resetform_app = ResetrequestForm()
+    if resetform_app.validate_on_submit():
+        requestuser = User.query.filter_by(email=resetform_app.email_request_input.data).first()
+        if requestuser:
+            resettoken = requestuser.generate_resetpw_token()
+            send_email(requestuser.email, 'Reset Your Password',
+                       'auth/email/reset_password',
+                       mailuser=requestuser, token=resettoken,
+                       next=request.args.get('next'))
+        flash('An email with instructions to reset your password has been sent to you.')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/reset_password.html', resetform_display=resetform_app)
+
+@auth.route('/reset/<token>', methods=['GET', 'POST'])
+def password_reset(token):
+    if not current_user.is_anonymous:
+        return redirect(url_for('main.index'))
+
+    resetpwform_app = PasswordResetForm()
+
+    #自动从token中解析出用户邮箱
+    s = Serializer(current_app.config['SECRET_KEY'])
+    try:
+        data = s.loads(token)
+        resetid = data.get('reset')
+        resetquery = User.query.filter_by(uid=resetid).first()
+        resetpwform_app.email_resetpw_input.data = resetquery.email #设定email默认值且readonly
+    except: # pylint: disable=W0702
+        flash('Your url is expired.')
+        return redirect(url_for('main.index'))
+
+    if resetpwform_app.validate_on_submit():
+        resetuser = User.query.filter_by(email=resetquery.email).first()
+        if resetuser is None:
+            return redirect(url_for('main.index'))
+        if resetuser.reset_password(token, resetpwform_app.passwd_reset_input.data):
+            flash('Your password has been updated.')
+            return redirect(url_for('auth.login'))
+        else:
+            flash('Your password has not been updated.')
+            return redirect(url_for('main.index'))
+    return render_template('auth/reset_password.html', resetform_display=resetpwform_app)
